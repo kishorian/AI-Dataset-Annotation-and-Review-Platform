@@ -1,0 +1,149 @@
+.annotation-layout {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 30px;
+  margin-top: 30px;
+}
+
+.samples-list {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.samples-list h3 {
+  margin-bottom: 20px;
+  color: #2c3e50;
+}
+
+.sample-item {
+  padding: 16px;
+  border: 1px solid #ecf0f1;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sample-item:hover {
+  border-color: #3498db;
+  background-color: #f8f9fa;
+}
+
+.sample-item.active {
+  border-color: #3498db;
+  background-color: #ebf5fb;
+}
+
+.sample-text {
+  color: #2c3e50;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.annotation-form-container {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.annotation-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-section h3 {
+  color: #2c3e50;
+  font-size: 18px;
+  margin: 0;
+}
+
+.form-section label {
+  color: #2c3e50;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.sample-display {
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 8px;
+  color: #2c3e50;
+  line-height: 1.6;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.form-section select {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.submit-button {
+  padding: 12px 24px;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.submit-button:hover:not(:disabled) {
+  background: #2980b9;
+}
+
+.submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.empty-form {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  color: #7f8c8d;
+}
+
+.success-message {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 12px;
+  border-radius: 6px;
+}
+
+.error-message {
+  background-color: #fee;
+  color: #c33;
+  padding: 12px;
+  border-radius: 6px;
+}
+
+.empty-state {
+  text-align: center;
+  color: #7f8c8d;
+  padding: 40px;
+}
+
+@media (max-width: 968px) {
+  .annotation-layout {
+    grid-template-columns: 1fr;
+  }
+}

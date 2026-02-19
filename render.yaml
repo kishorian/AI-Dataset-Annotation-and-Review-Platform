@@ -1,0 +1,49 @@
+services:
+  # Docker deployment (recommended)
+  - type: web
+    name: ai-dataset-annotation-platform-docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 30
+      - key: APP_NAME
+        value: AI Dataset Annotation Platform
+      - key: APP_VERSION
+        value: 1.0.0
+      - key: DEBUG
+        value: false
+      - key: LOG_LEVEL
+        value: INFO
+
+  # Native deployment (alternative - uncomment to use)
+  # - type: web
+  #   name: ai-dataset-annotation-platform-native
+  #   env: python
+  #   buildCommand: |
+  #     cd frontend && npm install && npm run build &&
+  #     cd .. && pip install -r requirements.txt
+  #   startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+  #   envVars:
+  #     - key: DATABASE_URL
+  #       sync: false
+  #     - key: SECRET_KEY
+  #       generateValue: true
+  #     - key: ALGORITHM
+  #       value: HS256
+  #     - key: ACCESS_TOKEN_EXPIRE_MINUTES
+  #       value: 30
+  #     - key: APP_NAME
+  #       value: AI Dataset Annotation Platform
+  #     - key: APP_VERSION
+  #       value: 1.0.0
+  #     - key: DEBUG
+  #       value: false
+  #     - key: LOG_LEVEL
+  #       value: INFO
