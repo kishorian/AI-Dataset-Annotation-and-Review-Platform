@@ -5,7 +5,6 @@ from sqlalchemy.pool import QueuePool
 from sqlalchemy.engine import Engine
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 from app.config import settings
-from app.core.logging import logger
 
 
 def prepare_database_url(url: str) -> str:
@@ -31,7 +30,7 @@ def prepare_database_url(url: str) -> str:
     
     if is_production and "sslmode" not in query_params:
         query_params["sslmode"] = ["require"]
-        logger.info("Added SSL mode to database URL for production")
+        print("Added SSL mode to database URL for production")
     
     # Reconstruct query string
     new_query = urlencode(query_params, doseq=True)
@@ -92,7 +91,7 @@ def receive_checkout(dbapi_conn, connection_record, connection_proxy):
     Log when a connection is checked out from the pool.
     """
     if settings.DEBUG:
-        logger.debug("Database connection checked out from pool")
+        print("Database connection checked out from pool")
 
 
 @event.listens_for(Engine, "checkin")
@@ -101,7 +100,7 @@ def receive_checkin(dbapi_conn, connection_record):
     Log when a connection is returned to the pool.
     """
     if settings.DEBUG:
-        logger.debug("Database connection returned to pool")
+        print("Database connection returned to pool")
 
 
 def get_db():
@@ -118,7 +117,7 @@ def get_db():
     try:
         yield db
     except Exception as e:
-        logger.error(f"Database session error: {e}", exc_info=True)
+        print(f"Database session error: {e}")
         db.rollback()
         raise
     finally:
@@ -132,9 +131,9 @@ def init_db():
     """
     try:
         Base.metadata.create_all(bind=engine)
-        logger.info("Database tables initialized successfully")
+        print("Database tables initialized successfully")
     except Exception as e:
-        logger.error(f"Failed to initialize database: {e}", exc_info=True)
+        print(f"Failed to initialize database: {e}")
         raise
 
 
@@ -146,8 +145,8 @@ def check_db_connection() -> bool:
     try:
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
-        logger.info("Database connection check successful")
+        print("Database connection check successful")
         return True
     except Exception as e:
-        logger.error(f"Database connection check failed: {e}", exc_info=True)
+        print(f"Database connection check failed: {e}")
         return False
