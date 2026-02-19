@@ -53,6 +53,7 @@ const Register = () => {
               onChange={(e) => setEmail(e.target.value)}
               required
               placeholder="your@email.com"
+              autoComplete="email"
             />
           </div>
 
@@ -66,6 +67,7 @@ const Register = () => {
               required
               placeholder="Min 8 chars, uppercase, lowercase, digit"
               minLength={8}
+              autoComplete="new-password"
             />
           </div>
 
