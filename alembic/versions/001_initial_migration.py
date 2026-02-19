@@ -48,90 +48,90 @@ def upgrade() -> None:
         END $$;
     """)
     
-    # Create users table
-    op.create_table(
-        'users',
-        sa.Column('id', postgresql.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4),
-        sa.Column('email', sa.String(), nullable=False, unique=True),
-        sa.Column('hashed_password', sa.String(), nullable=False),
-        sa.Column('role', postgresql.ENUM('admin', 'annotator', 'reviewer', name='userrole'), nullable=False, server_default='annotator'),
-        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    )
-    op.create_index('ix_users_id', 'users', ['id'])
-    op.create_index('ix_users_email', 'users', ['email'])
-    op.create_index('ix_users_role', 'users', ['role'])
+    # Create users table (only if it doesn't exist)
+    op.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            email VARCHAR NOT NULL UNIQUE,
+            hashed_password VARCHAR NOT NULL,
+            role userrole NOT NULL DEFAULT 'annotator',
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+        )
+    """)
+    # Create indexes only if they don't exist
+    op.execute("CREATE INDEX IF NOT EXISTS ix_users_id ON users(id)")
+    op.execute("CREATE INDEX IF NOT EXISTS ix_users_email ON users(email)")
+    op.execute("CREATE INDEX IF NOT EXISTS ix_users_role ON users(role)")
     
-    # Create projects table
-    op.create_table(
-        'projects',
-        sa.Column('id', postgresql.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4),
-        sa.Column('name', sa.String(), nullable=False),
-        sa.Column('description', sa.Text(), nullable=True),
-        sa.Column('created_by', postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-        sa.ForeignKeyConstraint(['created_by'], ['users.id'], ondelete='CASCADE'),
-    )
-    op.create_index('ix_projects_id', 'projects', ['id'])
-    op.create_index('ix_projects_name', 'projects', ['name'])
-    op.create_index('idx_project_created_by', 'projects', ['created_by'])
+    # Create projects table (only if it doesn't exist)
+    op.execute("""
+        CREATE TABLE IF NOT EXISTS projects (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            name VARCHAR NOT NULL,
+            description TEXT,
+            created_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+        )
+    """)
+    op.execute("CREATE INDEX IF NOT EXISTS ix_projects_id ON projects(id)")
+    op.execute("CREATE INDEX IF NOT EXISTS ix_projects_name ON projects(name)")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_project_created_by ON projects(created_by)")
     
-    # Create data_samples table
-    op.create_table(
-        'data_samples',
-        sa.Column('id', postgresql.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4),
-        sa.Column('project_id', postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column('text_content', sa.Text(), nullable=False),
-        sa.Column('status', postgresql.ENUM('pending', 'annotated', 'reviewed', name='samplestatus'), nullable=False, server_default='pending'),
-        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-        sa.ForeignKeyConstraint(['project_id'], ['projects.id'], ondelete='CASCADE'),
-    )
-    op.create_index('ix_data_samples_id', 'data_samples', ['id'])
-    op.create_index('ix_data_samples_project_id', 'data_samples', ['project_id'])
-    op.create_index('ix_data_samples_status', 'data_samples', ['status'])
-    op.create_index('idx_sample_project_id', 'data_samples', ['project_id'])
-    op.create_index('idx_sample_status', 'data_samples', ['status'])
-    op.create_index('idx_sample_project_status', 'data_samples', ['project_id', 'status'])
+    # Create data_samples table (only if it doesn't exist)
+    op.execute("""
+        CREATE TABLE IF NOT EXISTS data_samples (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+            text_content TEXT NOT NULL,
+            status samplestatus NOT NULL DEFAULT 'pending',
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+        )
+    """)
+    op.execute("CREATE INDEX IF NOT EXISTS ix_data_samples_id ON data_samples(id)")
+    op.execute("CREATE INDEX IF NOT EXISTS ix_data_samples_project_id ON data_samples(project_id)")
+    op.execute("CREATE INDEX IF NOT EXISTS ix_data_samples_status ON data_samples(status)")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_sample_project_id ON data_samples(project_id)")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_sample_status ON data_samples(status)")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_sample_project_status ON data_samples(project_id, status)")
     
-    # Create annotations table
-    op.create_table(
-        'annotations',
-        sa.Column('id', postgresql.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4),
-        sa.Column('sample_id', postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column('annotator_id', postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column('label', postgresql.ENUM('positive', 'negative', 'neutral', name='annotationlabel'), nullable=False),
-        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-        sa.ForeignKeyConstraint(['sample_id'], ['data_samples.id'], ondelete='CASCADE'),
-        sa.ForeignKeyConstraint(['annotator_id'], ['users.id'], ondelete='CASCADE'),
-    )
-    op.create_index('ix_annotations_id', 'annotations', ['id'])
-    op.create_index('ix_annotations_sample_id', 'annotations', ['sample_id'])
-    op.create_index('ix_annotations_annotator_id', 'annotations', ['annotator_id'])
-    op.create_index('ix_annotations_label', 'annotations', ['label'])
-    op.create_index('idx_annotation_sample_id', 'annotations', ['sample_id'])
-    op.create_index('idx_annotation_annotator_id', 'annotations', ['annotator_id'])
-    op.create_index('idx_annotation_label', 'annotations', ['label'])
-    op.create_index('idx_annotation_sample_annotator', 'annotations', ['sample_id', 'annotator_id'])
+    # Create annotations table (only if it doesn't exist)
+    op.execute("""
+        CREATE TABLE IF NOT EXISTS annotations (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            sample_id UUID NOT NULL REFERENCES data_samples(id) ON DELETE CASCADE,
+            annotator_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            label annotationlabel NOT NULL,
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+        )
+    """)
+    op.execute("CREATE INDEX IF NOT EXISTS ix_annotations_id ON annotations(id)")
+    op.execute("CREATE INDEX IF NOT EXISTS ix_annotations_sample_id ON annotations(sample_id)")
+    op.execute("CREATE INDEX IF NOT EXISTS ix_annotations_annotator_id ON annotations(annotator_id)")
+    op.execute("CREATE INDEX IF NOT EXISTS ix_annotations_label ON annotations(label)")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_annotation_sample_id ON annotations(sample_id)")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_annotation_annotator_id ON annotations(annotator_id)")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_annotation_label ON annotations(label)")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_annotation_sample_annotator ON annotations(sample_id, annotator_id)")
     
-    # Create reviews table
-    op.create_table(
-        'reviews',
-        sa.Column('id', postgresql.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4),
-        sa.Column('annotation_id', postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column('reviewer_id', postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column('decision', postgresql.ENUM('approved', 'rejected', name='reviewdecision'), nullable=False),
-        sa.Column('feedback', sa.Text(), nullable=True),
-        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-        sa.ForeignKeyConstraint(['annotation_id'], ['annotations.id'], ondelete='CASCADE'),
-        sa.ForeignKeyConstraint(['reviewer_id'], ['users.id'], ondelete='CASCADE'),
-    )
-    op.create_index('ix_reviews_id', 'reviews', ['id'])
-    op.create_index('ix_reviews_annotation_id', 'reviews', ['annotation_id'])
-    op.create_index('ix_reviews_reviewer_id', 'reviews', ['reviewer_id'])
-    op.create_index('ix_reviews_decision', 'reviews', ['decision'])
-    op.create_index('idx_review_annotation_id', 'reviews', ['annotation_id'])
-    op.create_index('idx_review_reviewer_id', 'reviews', ['reviewer_id'])
-    op.create_index('idx_review_decision', 'reviews', ['decision'])
-    op.create_index('idx_review_annotation_reviewer', 'reviews', ['annotation_id', 'reviewer_id'])
+    # Create reviews table (only if it doesn't exist)
+    op.execute("""
+        CREATE TABLE IF NOT EXISTS reviews (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            annotation_id UUID NOT NULL REFERENCES annotations(id) ON DELETE CASCADE,
+            reviewer_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            decision reviewdecision NOT NULL,
+            feedback TEXT,
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+        )
+    """)
+    op.execute("CREATE INDEX IF NOT EXISTS ix_reviews_id ON reviews(id)")
+    op.execute("CREATE INDEX IF NOT EXISTS ix_reviews_annotation_id ON reviews(annotation_id)")
+    op.execute("CREATE INDEX IF NOT EXISTS ix_reviews_reviewer_id ON reviews(reviewer_id)")
+    op.execute("CREATE INDEX IF NOT EXISTS ix_reviews_decision ON reviews(decision)")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_review_annotation_id ON reviews(annotation_id)")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_review_reviewer_id ON reviews(reviewer_id)")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_review_decision ON reviews(decision)")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_review_annotation_reviewer ON reviews(annotation_id, reviewer_id)")
 
 
 def downgrade() -> None:
