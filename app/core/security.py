@@ -50,11 +50,21 @@ def validate_password_strength(password: str) -> tuple[bool, Optional[str]]:
     Returns:
         Tuple of (is_valid, error_message)
     """
+    # bcrypt only considers the first 72 bytes of the password.
+    # Enforce this explicitly to avoid confusing behavior and passlib errors.
+    if len(password.encode("utf-8")) > 72:
+        return (
+            False,
+            "Password cannot be longer than 72 bytes (bcrypt limit). "
+            "Use a shorter password (especially if using emojis/non-ASCII).",
+        )
+
     if len(password) < 8:
         return False, "Password must be at least 8 characters long"
     
+    # Secondary (UX) upper bound (bcrypt is already enforced above).
     if len(password) > 128:
-        return False, "Password must be less than 128 characters long"
+        return False, "Password must be 128 characters or fewer"
     
     if not any(c.isupper() for c in password):
         return False, "Password must contain at least one uppercase letter"
