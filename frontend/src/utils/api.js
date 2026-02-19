@@ -4,8 +4,13 @@ import config from '../config/env'
 /**
  * Create axios instance with base configuration
  */
+// Construct base URL: if apiBaseURL is empty (production), use '/api', otherwise append '/api'
+const baseURL = config.apiBaseURL 
+  ? `${config.apiBaseURL}/api` 
+  : '/api'
+
 const api = axios.create({
-  baseURL: `${config.apiBaseURL}/api`,
+  baseURL: baseURL,
   headers: {
     'Content-Type': 'application/json',
   },

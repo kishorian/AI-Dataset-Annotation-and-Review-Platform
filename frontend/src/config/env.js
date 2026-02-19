@@ -3,9 +3,27 @@
  * Access environment variables via import.meta.env in Vite
  */
 
+// Determine API base URL
+// In production (when served from same origin), use relative URL
+// In development, use localhost or environment variable
+const getApiBaseURL = () => {
+  // If explicitly set via environment variable, use it
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL
+  }
+  
+  // In production, use relative URL (same origin)
+  if (import.meta.env.PROD) {
+    return '' // Empty string means relative URL (same origin)
+  }
+  
+  // In development, default to localhost
+  return 'http://localhost:8000'
+}
+
 export const config = {
   // API Configuration
-  apiBaseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000',
+  apiBaseURL: getApiBaseURL(),
   
   // Environment
   env: import.meta.env.VITE_ENV || import.meta.env.MODE || 'development',
@@ -15,11 +33,6 @@ export const config = {
   
   // Check if running in production
   isProduction: import.meta.env.PROD,
-}
-
-// Validate required environment variables
-if (!config.apiBaseURL) {
-  console.warn('VITE_API_BASE_URL is not set, using default: http://localhost:8000')
 }
 
 export default config
