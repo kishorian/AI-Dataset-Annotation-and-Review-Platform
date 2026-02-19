@@ -1,4 +1,5 @@
-from pydantic import BaseModel, EmailStr, ConfigDict
+from pydantic import BaseModel, EmailStr, ConfigDict, Field
+
 from datetime import datetime
 from typing import Optional
 import uuid
@@ -11,7 +12,8 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    password: str
+    password: str = Field(..., min_length=8, max_length=64)
+
 
 
 class UserUpdate(BaseModel):
