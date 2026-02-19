@@ -11,6 +11,7 @@ from app.core.security import verify_token
 from app.models.user import User as UserModel
 from app.core.exceptions import handle_app_exception, UnauthorizedError, ConflictError
 from app.core.logging import logger
+from app.config import settings
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -49,9 +50,11 @@ async def register(
         )
     except Exception as e:
         logger.error(f"Registration error: {e}", exc_info=True)
+        # Include error details in development, generic message in production
+        error_detail = str(e) if settings.DEBUG else "An error occurred during registration"
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred during registration"
+            detail=error_detail
         )
 
 

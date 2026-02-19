@@ -54,9 +54,13 @@ class UserService:
             db.commit()
             db.refresh(db_user)
             return db_user
-        except IntegrityError:
+        except IntegrityError as e:
             db.rollback()
             raise ConflictError("User creation failed due to integrity constraint")
+        except Exception as e:
+            db.rollback()
+            # Re-raise with more context
+            raise Exception(f"Database error creating user: {str(e)}") from e
     
     @staticmethod
     def update_user(db: Session, user_id: uuid.UUID, user_update: UserUpdate) -> User:
