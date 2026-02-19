@@ -18,11 +18,35 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # Create enum types
-    op.execute("CREATE TYPE userrole AS ENUM ('admin', 'annotator', 'reviewer')")
-    op.execute("CREATE TYPE samplestatus AS ENUM ('pending', 'annotated', 'reviewed')")
-    op.execute("CREATE TYPE annotationlabel AS ENUM ('positive', 'negative', 'neutral')")
-    op.execute("CREATE TYPE reviewdecision AS ENUM ('approved', 'rejected')")
+    # Create enum types (only if they don't exist)
+    op.execute("""
+        DO $$ BEGIN
+            CREATE TYPE userrole AS ENUM ('admin', 'annotator', 'reviewer');
+        EXCEPTION
+            WHEN duplicate_object THEN null;
+        END $$;
+    """)
+    op.execute("""
+        DO $$ BEGIN
+            CREATE TYPE samplestatus AS ENUM ('pending', 'annotated', 'reviewed');
+        EXCEPTION
+            WHEN duplicate_object THEN null;
+        END $$;
+    """)
+    op.execute("""
+        DO $$ BEGIN
+            CREATE TYPE annotationlabel AS ENUM ('positive', 'negative', 'neutral');
+        EXCEPTION
+            WHEN duplicate_object THEN null;
+        END $$;
+    """)
+    op.execute("""
+        DO $$ BEGIN
+            CREATE TYPE reviewdecision AS ENUM ('approved', 'rejected');
+        EXCEPTION
+            WHEN duplicate_object THEN null;
+        END $$;
+    """)
     
     # Create users table
     op.create_table(
