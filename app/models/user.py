@@ -1,5 +1,5 @@
-from sqlalchemy import Column, String, DateTime, Enum, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, DateTime, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID, ENUM as PGEnum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import uuid
@@ -13,7 +13,18 @@ class User(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
-    role = Column(Enum(UserRole), nullable=False, default=UserRole.ANNOTATOR, index=True)
+    # Use Postgres enum values (e.g. "annotator") instead of names (e.g. "ANNOTATOR")
+    role = Column(
+        PGEnum(
+            UserRole,
+            name="userrole",
+            values_callable=lambda enum_cls: [e.value for e in enum_cls],
+            create_type=False,  # enum type is managed by migrations
+        ),
+        nullable=False,
+        default=UserRole.ANNOTATOR,
+        index=True,
+    )
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     
     # Relationships

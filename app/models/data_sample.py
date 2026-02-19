@@ -1,5 +1,5 @@
-from sqlalchemy import Column, Text, DateTime, ForeignKey, Enum, Index
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, Text, DateTime, ForeignKey, Index
+from sqlalchemy.dialects.postgresql import UUID, ENUM as PGEnum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import uuid
@@ -13,7 +13,18 @@ class DataSample(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True)
     text_content = Column(Text, nullable=False)
-    status = Column(Enum(SampleStatus), nullable=False, default=SampleStatus.PENDING, index=True)
+    # Use Postgres enum values (e.g. "pending") instead of names (e.g. "PENDING")
+    status = Column(
+        PGEnum(
+            SampleStatus,
+            name="samplestatus",
+            values_callable=lambda enum_cls: [e.value for e in enum_cls],
+            create_type=False,
+        ),
+        nullable=False,
+        default=SampleStatus.PENDING,
+        index=True,
+    )
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     
     # Relationships

@@ -1,5 +1,5 @@
-from sqlalchemy import Column, Text, DateTime, ForeignKey, Enum, Index
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, Text, DateTime, ForeignKey, Index
+from sqlalchemy.dialects.postgresql import UUID, ENUM as PGEnum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import uuid
@@ -13,7 +13,17 @@ class Review(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     annotation_id = Column(UUID(as_uuid=True), ForeignKey("annotations.id", ondelete="CASCADE"), nullable=False, index=True)
     reviewer_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    decision = Column(Enum(ReviewDecision), nullable=False, index=True)
+    # Use Postgres enum values (e.g. "approved") instead of names (e.g. "APPROVED")
+    decision = Column(
+        PGEnum(
+            ReviewDecision,
+            name="reviewdecision",
+            values_callable=lambda enum_cls: [e.value for e in enum_cls],
+            create_type=False,
+        ),
+        nullable=False,
+        index=True,
+    )
     feedback = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     

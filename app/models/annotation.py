@@ -1,5 +1,5 @@
-from sqlalchemy import Column, DateTime, ForeignKey, Enum, Index
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, DateTime, ForeignKey, Index
+from sqlalchemy.dialects.postgresql import UUID, ENUM as PGEnum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import uuid
@@ -13,7 +13,17 @@ class Annotation(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     sample_id = Column(UUID(as_uuid=True), ForeignKey("data_samples.id", ondelete="CASCADE"), nullable=False, index=True)
     annotator_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    label = Column(Enum(AnnotationLabel), nullable=False, index=True)
+    # Use Postgres enum values (e.g. "positive") instead of names (e.g. "POSITIVE")
+    label = Column(
+        PGEnum(
+            AnnotationLabel,
+            name="annotationlabel",
+            values_callable=lambda enum_cls: [e.value for e in enum_cls],
+            create_type=False,
+        ),
+        nullable=False,
+        index=True,
+    )
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     
     # Relationships
