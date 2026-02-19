@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, OperationalError, ProgrammingError
 import uuid
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
@@ -57,6 +57,13 @@ class UserService:
         except IntegrityError as e:
             db.rollback()
             raise ConflictError("User creation failed due to integrity constraint")
+        except (OperationalError, ProgrammingError) as e:
+            db.rollback()
+            # Database table might not exist - suggest running migrations
+            error_msg = str(e)
+            if "does not exist" in error_msg or "relation" in error_msg.lower():
+                raise Exception(f"Database table not found. Please run migrations: alembic upgrade head. Error: {error_msg}")
+            raise Exception(f"Database error: {error_msg}")
         except Exception as e:
             db.rollback()
             # Re-raise with more context
