@@ -4,11 +4,11 @@ from sqlalchemy.orm import Session
 from pydantic import EmailStr
 from app.database import get_db
 from app.schemas.auth import Token
-from app.schemas.user import UserCreate, User
+from app.schemas.user import UserCreate, User as UserSchema
 from app.services.auth_service import AuthService
 from app.core.dependencies import get_current_active_user
 from app.core.security import verify_token
-from app.models.user import User
+from app.models.user import User as UserModel
 from app.core.exceptions import handle_app_exception, UnauthorizedError, ConflictError
 from app.core.logging import logger
 
@@ -17,7 +17,7 @@ router = APIRouter(prefix="/auth", tags=["authentication"])
 
 @router.post(
     "/register",
-    response_model=User,
+    response_model=UserSchema,
     status_code=status.HTTP_201_CREATED,
     summary="Register a new user",
     response_description="User successfully registered"
@@ -120,12 +120,12 @@ async def verify_access_token(
 
 @router.get(
     "/me",
-    response_model=User,
+    response_model=UserSchema,
     summary="Get current user information",
     response_description="Current authenticated user details"
 )
 async def get_current_user_info(
-    current_user: User = Depends(get_current_active_user)
+    current_user: UserModel = Depends(get_current_active_user)
 ):
     """
     Get information about the currently authenticated user.
